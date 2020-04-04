@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<template>
+ <object name="Teleport" type="Teleporter" width="8" height="8">
+  <properties>
+   <property name="isTrigger" type="bool" value="true"/>
+   <property name="map" value="target"/>
+   <property name="x" type="float" value="0"/>
+   <property name="y" type="float" value="0"/>
+  </properties>
+ </object>
+</template>

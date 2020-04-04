@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee54d2796009bef4899de4b3d77c6c93, type: 3}
+  m_Name: ReimuMelee3Slash
+  m_EditorClassIdentifier: 
+  data:
+    poses:
+    - {fileID: 1258401906512073074, guid: 25f19dcc98691c242824fab5ee238873, type: 3}
+    - {fileID: 3952310095765402263, guid: 25f19dcc98691c242824fab5ee238873, type: 3}
+    - {fileID: 1665790606788667478, guid: 25f19dcc98691c242824fab5ee238873, type: 3}
+    - {fileID: -3297133810615391649, guid: 25f19dcc98691c242824fab5ee238873, type: 3}
+    - {fileID: -3489437370572276620, guid: 25f19dcc98691c242824fab5ee238873, type: 3}
+    animSpeed: 9
+    mirrorX: 0
+    mirrorY: 0
+    animateMirrorX: 0
+    animateMirrorY: 0
