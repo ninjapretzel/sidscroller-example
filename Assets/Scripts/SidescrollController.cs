@@ -285,6 +285,9 @@ public class SidescrollController : PixelPerfectBehavior {
 
 		if (lastDodge > 0 && lastKick > 0) {
 			velocity.x = Mathf.MoveTowards(velocity.x, 0, (isGrounded ? groundedFriction : friction) * Time.deltaTime);
+			if (lastDodge < 1.0 && Released("dodge")) {
+				velocity.x = 0;
+			}
 		}
 
 		// if (Mathf.Abs(velocity.x) < .1) { velocity.x = 0; }
@@ -331,6 +334,7 @@ public class SidescrollController : PixelPerfectBehavior {
 			if (check != null) { spriteAnimator = check.GetComponentInChildren<SpriteAnimator>();  }
 		}
 		if (spriteAnimator == null) { return; }
+		spriteAnimator.flipX = facing != Mathf.Sign(defaultXFacing);
 		if (meleeState == MELEE_STARTING) {
 			//Debug.Log("Melee message recieved");
 			SpriteAnim meleeAnim = Melee;
@@ -362,7 +366,6 @@ public class SidescrollController : PixelPerfectBehavior {
 			}
 		}
 		
-		spriteAnimator.flipX = facing != Mathf.Sign(defaultXFacing);
 		
 		if (moved.x == 0) {
 			spriteAnimator.anim = Idle;
