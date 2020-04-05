@@ -281,9 +281,9 @@ MonoBehaviour:
   controlDelay: 0.3
   kickPower: {x: 8, y: 13}
   dodgePower: {x: 17, y: 4}
-  spriteAnimator: {fileID: 0}
-  effectAnimator: {fileID: 0}
-  col: {fileID: 0}
+  spriteAnimator: {fileID: 2432794724501408056}
+  effectAnimator: {fileID: 296437592}
+  col: {fileID: 8939747984479376181}
   defaultXFacing: 1
   shootTimeout: 0.25
   meleeComboTime: 0.8
