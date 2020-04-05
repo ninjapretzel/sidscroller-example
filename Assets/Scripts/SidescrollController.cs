@@ -309,15 +309,6 @@ public class SidescrollController : PixelPerfectBehavior {
 			velocity.x *= .5f;
 		}
 
-		if (moved.x == 0 && input.x != 0) {
-			float x = movementFromInput.x;
-			while (Mathf.Abs(x) >= snapDistance) {
-				moved += Move(new Vector3(x * Time.deltaTime, 0, 0));
-				x *= .25f;
-			}
-		}
-		
-
 		isGrounded = CheckGrounded();
 		if (velocity.y < 0 && CheckWillTouchGround()) {
 			velocity.y *= .5f;
@@ -471,9 +462,18 @@ public class SidescrollController : PixelPerfectBehavior {
 		//Physics.BoxCastNonAlloc()
 		Vector3 moved = Vector3.zero;
 		moved += DoMove(new Vector3(0, movement.y, 0));
+		while (moved.y == 0 && Math.Abs(movement.y) > snapDistance) {
+			movement.y *= .5f;
+			moved += DoMove(new Vector3(0, movement.y, 0));
+		}
 		moved += DoMove(new Vector3(movement.x, 0, 0));
+		while (moved.x == 0 && Math.Abs(movement.x) > snapDistance) {
+			movement.x *= .5f;
+			moved += DoMove(new Vector3(movement.x, 0, 0));
+		}
 		return moved;
 	}
+
 	/// <summary> Move the character until they are in contact with some surface. </summary>
 	/// <param name="movement"> Requested movement </param>
 	/// <returns> Applied movement </returns>
