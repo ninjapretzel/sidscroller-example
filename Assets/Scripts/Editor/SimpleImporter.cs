@@ -9,6 +9,7 @@ using SuperTiled2Unity.ThirdParty;
 using System.Linq;
 using System.Reflection;
 using System.Globalization;
+using UnityEngine.Tilemaps;
 
 public class SimpleImporter : CustomTmxImporter {
 
@@ -49,6 +50,14 @@ public class SimpleImporter : CustomTmxImporter {
 			foreach (var collider in colliders) { 
 				collider.isTrigger = prop.GetValueAsBool(); 
 			}
+		}
+		if (props.m_Properties.TryGetProperty("order", out prop)) {
+			var renderer = layer.GetComponent<TilemapRenderer>();
+			renderer.sortingOrder = prop.GetValueAsInt();
+		}
+		if (props.m_Properties.TryGetProperty("unity:order", out prop)) {
+			var renderer = layer.GetComponent<TilemapRenderer>();
+			renderer.sortingOrder = prop.GetValueAsInt();
 		}
 	}
 
