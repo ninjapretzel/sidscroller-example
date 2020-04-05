@@ -270,7 +270,7 @@ MonoBehaviour:
   walkSpeed: 7
   dashSpeed: 16
   gravity: 33
-  terminalVelocity: 40
+  terminalVelocity: 25
   jumpPower: 14
   snapDistance: 0.0625
   skinWidth: 0.125
@@ -278,7 +278,7 @@ MonoBehaviour:
   clingResponse: 11
   groundedFriction: 255
   friction: 30
-  controlDelay: 0.3
+  controlDelay: 0.15
   kickPower: {x: 8, y: 13}
   dodgePower: {x: 17, y: 4}
   spriteAnimator: {fileID: 2432794724501408056}
@@ -320,7 +320,7 @@ MonoBehaviour:
     orbitRotation: {x: 0, y: 0, z: 0}
     fov: 6
     useOrtho: 1
-    moveDampening: 0
+    moveDampening: 15
     turnDampening: 0
     fovDampening: 0
 --- !u!61 &8939747984479376181
