@@ -293,8 +293,10 @@ public class SidescrollController : PixelPerfectBehavior {
 		// if (Mathf.Abs(velocity.x) < .1) { velocity.x = 0; }
 		if (velocity.y > terminalVelocity) { velocity.y = terminalVelocity; }
 		movement = Vector3.zero;
+		Vector3 movementFromInput = Vector3.zero;
 		if (lastDodge >= controlDelay && lastKick >= controlDelay) {
-			movement = input * (dashing ? dashSpeed : walkSpeed);
+			movementFromInput = input * (dashing ? dashSpeed : walkSpeed);
+			movement = movementFromInput;
 		}
 		movement += velocity;
 
@@ -304,8 +306,17 @@ public class SidescrollController : PixelPerfectBehavior {
 
 		moved = Move(movement * Time.deltaTime);
 		if (moved.x == 0 && velocity.x != 0) {
-			velocity.x = 0;
+			velocity.x *= .5f;
 		}
+
+		if (moved.x == 0 && input.x != 0) {
+			float x = movementFromInput.x;
+			while (Mathf.Abs(x) >= snapDistance) {
+				moved += Move(new Vector3(x * Time.deltaTime, 0, 0));
+				x *= .25f;
+			}
+		}
+		
 
 		isGrounded = CheckGrounded();
 		if (velocity.y < 0 && CheckWillTouchGround()) {
@@ -437,6 +448,18 @@ public class SidescrollController : PixelPerfectBehavior {
 
 		}
 	}
+	void DrawBox(Vector3 p, Vector3 s, Color? color = null) {
+		Color c = color ?? Color.white;
+		Vector3 c1 = s;
+		Vector3 c2 = s; c2.x *= -1;
+		Vector3 c3 = s; c3.x *= -1; c3.y *= -1;
+		Vector3 c4 = s; c4.y *= -1;
+
+		Debug.DrawLine(p + c1, p + c2, c);
+		Debug.DrawLine(p + c3, p + c2, c);
+		Debug.DrawLine(p + c3, p + c4, c);
+		Debug.DrawLine(p + c1, p + c4, c);
+	}
 
 
 
@@ -463,7 +486,7 @@ public class SidescrollController : PixelPerfectBehavior {
 			if (col is BoxCollider2D) {
 				BoxCollider2D box = col as BoxCollider2D;
 				Vector3 point = box.transform.position + (Vector3)box.offset + movement;
-
+				
 				//
 				int numCollisions = Physics2D.BoxCastNonAlloc(box.transform.position + (Vector3)box.offset, box.size, 0, Vector3.down, raycastHits, maxDist);
 				if (numCollisions != 0) {
@@ -498,6 +521,7 @@ public class SidescrollController : PixelPerfectBehavior {
 			if (col is BoxCollider2D) {
 				BoxCollider2D box = col as BoxCollider2D;
 				Vector3 point = box.transform.position + (Vector3)box.offset + movement;
+				DrawBox(point, box.size/2f, Color.blue);
 				int numCollisions = Physics2D.OverlapBoxNonAlloc(point, box.size, 0, collisions);
 				if (numCollisions != 0) {
 					for (int i = 0; i < numCollisions; i++) {
@@ -531,18 +555,7 @@ public class SidescrollController : PixelPerfectBehavior {
 				
 
 				if (DEBUG_DRAW) { // Draw the touching check.
-					void DrawBox(Vector3 p, Vector3 s, Color? color = null) {
-						Color c = color ?? Color.white;
-						Vector3 c1 = s; 
-						Vector3 c2 = s; c2.x *= -1;
-						Vector3 c3 = s; c3.x *= -1; c3.y *= -1;
-						Vector3 c4 = s; c4.y *= -1;
-
-						Debug.DrawLine(p + c1, p + c2, c);
-						Debug.DrawLine(p + c3, p + c2, c);
-						Debug.DrawLine(p + c3, p + c4, c);
-						Debug.DrawLine(p + c1, p + c4, c);
-					}
+					
 					DrawBox(point, box.size * .5f);
 					DrawBox(point+sweep, box.size * .5f, Color.cyan);
 				}
