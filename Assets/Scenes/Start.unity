@@ -302,16 +302,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: -376148899732160815, guid: efee9121d261b3b4e9d3f77055fce1c1,
-        type: 3}
-      propertyPath: spriteAnimator
-      value: 
-      objectReference: {fileID: 1221464218}
-    - target: {fileID: -376148899732160815, guid: efee9121d261b3b4e9d3f77055fce1c1,
-        type: 3}
-      propertyPath: col
-      value: 
-      objectReference: {fileID: 1221464217}
     - target: {fileID: 8939747984479376169, guid: efee9121d261b3b4e9d3f77055fce1c1,
         type: 3}
       propertyPath: m_Name
@@ -379,24 +369,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: efee9121d261b3b4e9d3f77055fce1c1, type: 3}
---- !u!61 &1221464217 stripped
-BoxCollider2D:
-  m_CorrespondingSourceObject: {fileID: 8939747984479376181, guid: efee9121d261b3b4e9d3f77055fce1c1,
-    type: 3}
-  m_PrefabInstance: {fileID: 1221464216}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &1221464218 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 2432794724501408056, guid: efee9121d261b3b4e9d3f77055fce1c1,
-    type: 3}
-  m_PrefabInstance: {fileID: 1221464216}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 914037f3476a8144ba6b66e8d4da2d77, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1999374747
 GameObject:
   m_ObjectHideFlags: 0
