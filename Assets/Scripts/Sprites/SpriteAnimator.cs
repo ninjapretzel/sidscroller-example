@@ -13,9 +13,9 @@ public static class AnimHelpers {
 		int r = x % m;
 		return r < 0 ? r + m : r;
 	}
-
 }
 
+/// <summary> Storage object for sprite animation data </summary>
 [Serializable]
 public class SpriteAnim {
 	/// <summary> Poses to flip through </summary>
@@ -33,6 +33,7 @@ public class SpriteAnim {
 }
 
 
+/// <summary> Behavior that handles sprite animation </summary>
 public class SpriteAnimator : MonoBehaviour {
 	/// <summary> Empty sprite array. </summary>
 	private static readonly Sprite[] EMPTY = new Sprite[0];
@@ -68,11 +69,14 @@ public class SpriteAnimator : MonoBehaviour {
 	public float percent { get { return anim != null ? animTimeout * animSpeed / poses.Length : 0; } }
 	
 	void Update() {
+		// Find missing link, and exit if not present.
 		if (spriteRenderer == null) { spriteRenderer = GetComponent<SpriteRenderer>(); }
 		if (spriteRenderer == null) { return; }
 
+		// Elapse time
 		animTimeout += Time.deltaTime * animRate;
 
+		// Update sprite and flip states
 		spriteRenderer.sprite = GetPose(animTimeout);
 		spriteRenderer.flipX = GetMirrorX(animTimeout) ^ flipX;
 		spriteRenderer.flipY = GetMirrorY(animTimeout) ^ flipY;
@@ -137,6 +141,4 @@ public class SpriteAnimator : MonoBehaviour {
 			return mirrorY;
 		}
 	}
-
-	
 }

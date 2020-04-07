@@ -3,36 +3,44 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-
 /// <summary> Reasonably polished movement code. </summary>
 public class SidescrollController : PixelPerfectBehavior {
 	#region Input Simplifier
+	/// <summary> Current key states </summary>
 	public Dictionary<string, bool> keys;
+	/// <summary> Last frame's key states </summary>
 	public Dictionary<string, bool> lastKeys;
+	/// <summary> Updates the keystates by swapping dictionaries and checking keybinds. </summary>
 	public void UpdateKeys() {
+		// Initialize key dictionaries if they do not exist yet.
 		if (keys == null || lastKeys == null) {
 			keys = new Dictionary<string, bool>();
 			lastKeys = new Dictionary<string, bool>();
 			foreach (var pair in binds) { keys[pair.Key] = lastKeys[pair.Key] = false; }
-		} else { var swap = keys; keys = lastKeys; lastKeys = swap; }
+		} else { var swap = keys; keys = lastKeys; lastKeys = swap; } // Else, swap em
+		// Loop over all binds and sample this frame's inputs
 		foreach (var pair in binds) {
 			keys[pair.Key] = Input.GetKey(pair.Value);
 		}
 	}
+	/// <summary> Keybinds, key is the action name, value is the key for that action. </summary>
 	public Dictionary<string, KeyCode> binds = new Dictionary<string, KeyCode>() {
-		{ "left", KeyCode.LeftArrow },
-		{ "right", KeyCode.RightArrow },
-		{ "down", KeyCode.DownArrow},
-		{ "up", KeyCode.UpArrow },
-		{ "jump", KeyCode.Z },
-		{ "shoot", KeyCode.X },
-		{ "dash", KeyCode.C },
-		{ "melee", KeyCode.V },
-		{ "dodge", KeyCode.S },
+		{ "left",	KeyCode.LeftArrow },
+		{ "right",	KeyCode.RightArrow },
+		{ "down",	KeyCode.DownArrow},
+		{ "up",		KeyCode.UpArrow },
+		{ "jump",	KeyCode.Z },
+		{ "shoot",	KeyCode.X },
+		{ "dash",	KeyCode.C },
+		{ "melee",	KeyCode.V },
+		{ "dodge",	KeyCode.S },
 	};
-	public bool Pressed(string key) { return binds.ContainsKey(key) ? keys[key] && !lastKeys[key] : false; }
-	public bool Released(string key) { return binds.ContainsKey(key) ? !keys[key] && lastKeys[key] : false; }
-	public bool Held(string key) { return binds.ContainsKey(key) ? keys[key] : false; }
+	/// <summary> Is the given action pressed this frame? </summary>
+	public bool Pressed(string action) { return binds.ContainsKey(action) ? keys[action] && !lastKeys[action] : false; }
+	/// <summary> Is the given action released this frame? </summary>
+	public bool Released(string action) { return binds.ContainsKey(action) ? !keys[action] && lastKeys[action] : false; }
+	/// <summary> Is the given action held this frame? </summary>
+	public bool Held(string action) { return binds.ContainsKey(action) ? keys[action] : false; }
 	#endregion
 
 	/// <summary> Draw some debugging information </summary>
@@ -69,6 +77,20 @@ public class SidescrollController : PixelPerfectBehavior {
 	/// <summary> Velocity applied when dodging </summary>
 	public Vector2 dodgePower = new Vector2(17, 4);
 
+	/// <summary> Can the character use melee attacks? </summary>
+	[Header("Capabilities")]
+	public bool canMelee = false;
+	/// <summary> Can the character dodge backwards? </summary>
+	public bool canDodge = false;
+	/// <summary> Can the character swim in water? </summary>
+	public bool canSwim = false;
+	/// <summary> Can the character cling against walls and wall jump? </summary>
+	public bool canWallCling = false;
+	/// <summary> Can the character dash? </summary>
+	public bool canDash = false;
+	/// <summary> Can the character shoot? </summary>
+	public bool canShoot = false;
+
 	/// <summary> Character sprite animator </summary>
 	[Header("Links")]
 	public SpriteAnimator spriteAnimator;
@@ -92,30 +114,35 @@ public class SidescrollController : PixelPerfectBehavior {
 	public string currentAnimation = "";
 
 	#region animation "auto" properties
-	public SpriteAnim Climb { get { return LoadSpriteAnim(MemberName()); } }
-	public SpriteAnim ClimbDone { get { return LoadSpriteAnim(MemberName()); } }
-	public SpriteAnim Dash { get { return LoadSpriteAnim(MemberName()); } }
-	public SpriteAnim Falling { get { return LoadSpriteAnim(MemberName()); } }
-	public SpriteAnim Float { get { return LoadSpriteAnim(MemberName()); } }
-	public SpriteAnim Hurt { get { return LoadSpriteAnim(MemberName()); } }
-	public SpriteAnim Idle { get { return LoadSpriteAnim(MemberName()); } }
-	public SpriteAnim JumpBack { get { return LoadSpriteAnim(MemberName()); } }
-	public SpriteAnim Melee { get { return LoadSpriteAnim(MemberName() + meleePose); } }
-	public SpriteAnim MeleeAir { get { return LoadSpriteAnim(MemberName()); } }
-	public SpriteAnim MeleeClimb { get { return LoadSpriteAnim(MemberName()); } }
-	public SpriteAnim MeleeWallCling { get { return LoadSpriteAnim(MemberName()); } }
-	public SpriteAnim Moving { get { return LoadSpriteAnim(MemberName()); } }
-	public SpriteAnim Rising { get { return LoadSpriteAnim(MemberName()); } }
-	public SpriteAnim WallCling { get { return LoadSpriteAnim(MemberName()); } }
+	// These use the name of the member to dynamically load a resource.
+	// There is no magic going on, the relevant helper method is below.
+	// "MemberName()" returns the name of the method/property it is used within.
+	// All of the names here line up with a resource object. 
+	public SpriteAnim Climb				{ get { return LoadSpriteAnim(MemberName()); } }
+	public SpriteAnim ClimbDone			{ get { return LoadSpriteAnim(MemberName()); } }
+	public SpriteAnim Dash				{ get { return LoadSpriteAnim(MemberName()); } }
+	public SpriteAnim Falling			{ get { return LoadSpriteAnim(MemberName()); } }
+	public SpriteAnim Float				{ get { return LoadSpriteAnim(MemberName()); } }
+	public SpriteAnim Hurt				{ get { return LoadSpriteAnim(MemberName()); } }
+	public SpriteAnim Idle				{ get { return LoadSpriteAnim(MemberName()); } }
+	public SpriteAnim JumpBack			{ get { return LoadSpriteAnim(MemberName()); } }
+	public SpriteAnim MeleeAir			{ get { return LoadSpriteAnim(MemberName()); } }
+	public SpriteAnim MeleeClimb		{ get { return LoadSpriteAnim(MemberName()); } }
+	public SpriteAnim MeleeWallCling	{ get { return LoadSpriteAnim(MemberName()); } }
+	public SpriteAnim Moving			{ get { return LoadSpriteAnim(MemberName()); } }
+	public SpriteAnim Rising			{ get { return LoadSpriteAnim(MemberName()); } }
+	public SpriteAnim WallCling			{ get { return LoadSpriteAnim(MemberName()); } }
+
+	// This one is slightly different, appends a number.
+	public SpriteAnim Melee				{ get { return LoadSpriteAnim(MemberName() + meleePose); } } 
+	
 	/// <summary> Helpful macro that grabs the calling member name of anything that calls it. 
 	/// <para>Makes it easier to make properties utilizing the <see cref="data"/> field, eg </para> <para><code>
 	/// public <see cref="JsonObject"/> Attributes { get { return data.Get&lt;<see cref="JsonObject"/>&gt;(MemberName()); } }
 	/// </code></para></summary>
 	/// <param name="caller"> Autofilled by compiler </param>
 	/// <returns> Name of member calling this method. </returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static string MemberName([CallerMemberName] string caller = null) { return caller; }
-
 	#endregion
 
 	/// <summary> Loads an animation by name. </summary>
@@ -123,13 +150,13 @@ public class SidescrollController : PixelPerfectBehavior {
 	/// <returns> SpriteAnim loaded from a resource, or <see cref="defaultAnim"/> if none was loaded. </returns>
 	private SpriteAnim LoadSpriteAnim(string animName) {
 		if (lastShoot < shootTimeout) {
-			SpriteAnimAsset shootAsset = Resources.Load<SpriteAnimAsset>(animationPrefix + animName + "Shoot");
+			SpriteAnimAsset shootAsset = Resources.Load<SpriteAnimAsset>(animationPrefix + "/" + animName + "Shoot");
 			if (shootAsset != null) { 
 				currentAnimation = animName + "Shoot";
 				return shootAsset.data; 
 			}
 		}
-		SpriteAnimAsset asset = Resources.Load<SpriteAnimAsset>(animationPrefix + animName);
+		SpriteAnimAsset asset = Resources.Load<SpriteAnimAsset>(animationPrefix + "/" + animName);
 		currentAnimation = animName;
 		return asset != null ? asset.data : defaultAnim;
 	}
@@ -181,7 +208,7 @@ public class SidescrollController : PixelPerfectBehavior {
 	/// <summary> Can the character actually move right now? </summary>
 	bool canMove = true;
 	/// <summary> Is the character wall-clinging? </summary>
-	public bool clinging { get { return !isGrounded && (clingingLeft || clingingRight); } }
+	public bool clinging { get { return canWallCling && !isGrounded && (clingingLeft || clingingRight); } }
 	/// <summary> Is the character wall-clinging to the left? </summary>
 	public bool clingingLeft { get { return (input.x < 0 && wallOnLeft); } }
 	/// <summary> Is the character wall-clinging to the right? </summary>
@@ -210,12 +237,13 @@ public class SidescrollController : PixelPerfectBehavior {
 	/// <summary> Called by Unity on load. </summary>
 	void Awake() {
 		Application.targetFrameRate = 60;	
+		UpdateAnimation(Vector3.zero, Vector3.zero);
 	}
 	
 	/// <summary> Called by Unity before first frame. </summary>
 	void Start() {
 		UpdateAnimation(Vector3.zero, Vector3.zero);
-		if (spriteAnimator != null) { spriteAnimator.anim = Idle; }
+		// if (spriteAnimator != null) { spriteAnimator.anim = Idle; }
 	}
 	
 	/// <summary> Called by Unity every frame. </summary>
@@ -241,36 +269,38 @@ public class SidescrollController : PixelPerfectBehavior {
 		lastMelee += Time.deltaTime;
 		lastDodge += Time.deltaTime;
 		lastKick += Time.deltaTime;
-		if (Pressed("shoot")) {
+		if (canShoot && Pressed("shoot")) {
 			lastShoot = 0;
 		}
 		if (velocity.y > 0 && Released("jump")) {
 			velocity.y = 0;
 		}
 		
-		if ((meleeState == MELEE_DONE || spriteAnimator.percent > meleeComboPercent) && Pressed("melee")) {
-			meleeState = MELEE_STARTING;
-			if (isGrounded && lastMelee < meleeComboTime && meleePose < 3) {
-				meleePose += 1;
-			} else {
-				meleePose = 1;
+		if (canMelee) {
+			if ((meleeState == MELEE_DONE || spriteAnimator.percent > meleeComboPercent) && Pressed("melee")) {
+				meleeState = MELEE_STARTING;
+				if (isGrounded && lastMelee < meleeComboTime && meleePose < 3) {
+					meleePose += 1;
+				} else {
+					meleePose = 1;
+				}
+				lastMelee = 0;
 			}
-			lastMelee = 0;
 		}
 
 		if (isGrounded) {
 			velocity.y = 0;
-			dashing = Held("dash") && input.x != 0;
+			dashing = canDash && Held("dash") && input.x != 0;
 
 			if (canMove && Pressed("jump")) {
 				velocity.y = jumpPower;
-			} else if (canMove && Pressed("dodge")) {
+			} else if (canDodge && canMove && Pressed("dodge")) {
 				lastDodge = 0;
 				velocity.x = dodgePower.x * -facing;
 				velocity.y = dodgePower.y;
 			}
 		} else {
-			if (clinging) {
+			if (canWallCling && clinging) {
 				velocity.y = Mathf.Lerp(velocity.y, -clingSpeed, Time.deltaTime * clingResponse);
 				if (canMove && Pressed("jump")) {
 					lastKick = 0;

@@ -281,6 +281,12 @@ MonoBehaviour:
   controlDelay: 0.15
   kickPower: {x: 8, y: 13}
   dodgePower: {x: 17, y: 4}
+  canMelee: 1
+  canDodge: 1
+  canSwim: 0
+  canWallCling: 1
+  canDash: 1
+  canShoot: 1
   spriteAnimator: {fileID: 2432794724501408056}
   effectAnimator: {fileID: 296437592}
   col: {fileID: 8939747984479376181}

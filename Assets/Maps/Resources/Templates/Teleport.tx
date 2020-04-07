@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <template>
- <object name="Teleport" type="Teleporter" width="8" height="8">
+ <object name="Teleport" type="Teleporter" width="16" height="16">
   <properties>
    <property name="isTrigger" type="bool" value="true"/>
    <property name="map" value="target"/>

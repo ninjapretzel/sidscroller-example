@@ -4,7 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using SuperTiled2Unity;
 
-public class Daemon : MonoBehaviour {
+public partial class Daemon : MonoBehaviour {
 
 	public static Daemon main;
 	
@@ -53,17 +53,20 @@ public class Daemon : MonoBehaviour {
 	}
 
 	float[] times = new float[32];
+	float avgFps {
+		get {
+			float sum = 0;
+			int max = Mathf.Min(it, times.Length);
+			for (int i = 0; i < max; i++) {
+				sum += times[i];
+			}
+			if (max == 0 || sum == 0) { return -1; }
+			return 1f / (sum / max);
+		}
+	}
 	int it = 0;
 	void OnGUI() {
-		float sum = 0;
-		int max = Mathf.Min(it, times.Length);
-		for (int i = 0; i < max; i++) {
-			sum += times[i];
-		}
-		float avg = sum / max;
-		float fps = 1f / avg;
-		
-		 
+		float fps = avgFps;
 		GUILayout.Label($"FPS: {fps:F2}");
 	}
 
