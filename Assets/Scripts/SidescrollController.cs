@@ -289,6 +289,7 @@ public class SidescrollController : PixelPerfectBehavior {
 	/// <summary> Called by Unity before first frame. </summary>
 	void Start() {
 		UpdateAnimation(Vector3.zero, Vector3.zero);
+		isGrounded = CheckGrounded();
 		// if (spriteAnimator != null) { spriteAnimator.anim = Idle; }
 	}
 	
