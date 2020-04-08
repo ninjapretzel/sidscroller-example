@@ -310,14 +310,14 @@ public class SidescrollController : PixelPerfectBehavior {
 
 		canMove = true;
 		if (meleeState <= MELEE_PLAYING) { canMove = !isGrounded && !clinging; }
-		if (currentAnimation == "FireCharge") { canMove = false; }
+		if (currentAnimation == nameof(FireCharge)) { canMove = false; }
 
 		lastShoot += Time.deltaTime;
 		lastMelee += Time.deltaTime;
 		lastDodge += Time.deltaTime;
 		lastKick += Time.deltaTime;
 
-		if (canShoot) {
+		if (canShoot && currentAnimation != nameof(FireCharge)) {
 			// if (Held("shoot")) { lastShoot = 0; }
 			if (Pressed("shoot")) {
 				lastShoot = 0;
@@ -424,9 +424,13 @@ public class SidescrollController : PixelPerfectBehavior {
 
 	public void Fire() {
 		int charged = 0;
+		bool groundedChargeBoost = false;
 		if (chargeTime > 0 && chargeInfos != null) {
 			for (int i = 0; i < chargeInfos.Length; i++) {
-				if (chargeTime > chargeInfos[i].time) { charged = i + 1; }
+				if (chargeTime > chargeInfos[i].time) { 
+					charged = i + 1; 
+					groundedChargeBoost = isGrounded;
+				}
 			}
 		}
 		chargeTime = 0;
@@ -440,6 +444,15 @@ public class SidescrollController : PixelPerfectBehavior {
 		if (proj != null) {
 			proj.velocity.x *= facing;
 			proj.spriteAnimator.flipX = spriteAnimator.flipX;
+		}
+
+		if (groundedChargeBoost) {
+			Vector3 offset2 = offset.x * Vector3.right;
+			shot.position += offset2;
+			shot.localScale *= 2;
+			proj.power *= 2;
+			proj.spriteAnimator.animRate *= 2;
+			// var renderer = proj.GetComponent<SpriteRenderer>();
 		}
 	}
 	public void Shoot(string arg) {
@@ -471,7 +484,7 @@ public class SidescrollController : PixelPerfectBehavior {
 			spriteAnimator.spriteRenderer.color = Color.white;
 		}
 
-		if (currentAnimation == "FireCharge") { 
+		if (currentAnimation == nameof(FireCharge)) { 
 			if (spriteAnimator.percent < .99) { return; }
 		}
 		if (meleeState == MELEE_STARTING) {
