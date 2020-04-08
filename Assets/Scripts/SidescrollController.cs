@@ -224,7 +224,7 @@ public class SidescrollController : PixelPerfectBehavior {
 	/// <summary> Current input vector. </summary>
 	Vector3 input;
 	/// <summary> Current facing direction. 1.0f if facing right, -1.0f if facing left. </summary>
-	float facing = 1.0f;
+	[NonSerialized] public float facing = 1.0f;
 	/// <summary> Current movement vector. </summary>
 	Vector3 movement;
 	/// <summary> Current applied movement vector. </summary>
@@ -290,6 +290,7 @@ public class SidescrollController : PixelPerfectBehavior {
 	void Start() {
 		UpdateAnimation(Vector3.zero, Vector3.zero);
 		isGrounded = CheckGrounded();
+		facing = Game.lastFacing;
 		// if (spriteAnimator != null) { spriteAnimator.anim = Idle; }
 	}
 	

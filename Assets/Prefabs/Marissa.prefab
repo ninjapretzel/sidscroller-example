@@ -71,7 +71,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 9
-  m_Sprite: {fileID: 535384510312143128, guid: 7404c5c71e6ac4e47ab6f90cd82dfe45, type: 3}
+  m_Sprite: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -79,7 +79,7 @@ SpriteRenderer:
   m_Size: {x: 1, y: 1}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!114 &296437592
@@ -179,7 +179,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 10
-  m_Sprite: {fileID: 5753793059287547035, guid: 7404c5c71e6ac4e47ab6f90cd82dfe45,
+  m_Sprite: {fileID: 3503605205028341379, guid: 7404c5c71e6ac4e47ab6f90cd82dfe45,
     type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -204,7 +204,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   animAsset: {fileID: 0}
-  spriteRenderer: {fileID: 0}
+  spriteRenderer: {fileID: 1969300231893104808}
   anim:
     poses: []
     cues: []
@@ -299,7 +299,7 @@ MonoBehaviour:
     color: {r: 1, g: 1, b: 0.54901963, a: 1}
     flashRate: 0.22
   - time: 1.2
-    color: {r: 0.752, g: 1, b: 0.752, a: 1}
+    color: {r: 0.75, g: 1, b: 0.75, a: 1}
     flashRate: 0.12
   effectAnimator: {fileID: 296437592}
   defaultXFacing: 1

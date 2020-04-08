@@ -11,6 +11,7 @@ public static partial class Game {
 	public static bool flipX = false;
 	public static bool flipY = true;
 	public static bool allowMovement = true;
+	public static float lastFacing = 1.0f;
 	public static Vector3 teleportOffset = Vector3.zero;
 
 	public static void Initialize() {

@@ -22,10 +22,15 @@ public class ReallyDumbSimpleSwapCharacters : MonoBehaviour {
 		
 	}
 	
-	void LateUpdate() {
+	void Update() {
 		if (Input.GetKeyDown(KeyCode.Equals)) {
+			SidescrollController old = daemon.activePlayer.GetComponent<SidescrollController>();
+			if (old != null) {
+				Game.lastFacing = old.facing;
+			}
 			Destroy(daemon.activePlayer.gameObject);
 			daemon.playerPrefab = (daemon.playerPrefab == playerPrefab1) ? playerPrefab2 : playerPrefab1;
+			
 		}
 		
 	}
