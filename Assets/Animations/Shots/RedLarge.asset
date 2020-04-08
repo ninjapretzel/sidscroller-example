@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee54d2796009bef4899de4b3d77c6c93, type: 3}
+  m_Name: RedLarge
+  m_EditorClassIdentifier: 
+  data:
+    poses:
+    - {fileID: -8198285578107569284, guid: d7ef604ca1b999841b2b66d89294559d, type: 3}
+    - {fileID: -7023093553756289759, guid: d7ef604ca1b999841b2b66d89294559d, type: 3}
+    - {fileID: 7029281253810072275, guid: d7ef604ca1b999841b2b66d89294559d, type: 3}
+    - {fileID: -1260145449388052696, guid: d7ef604ca1b999841b2b66d89294559d, type: 3}
+    - {fileID: -5612113628111158907, guid: d7ef604ca1b999841b2b66d89294559d, type: 3}
+    - {fileID: -753645668912349536, guid: d7ef604ca1b999841b2b66d89294559d, type: 3}
+    cues: []
+    animSpeed: 6
+    mirrorX: 0
+    mirrorY: 0
+    animateMirrorX: 0
+    animateMirrorY: 0

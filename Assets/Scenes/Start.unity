@@ -398,6 +398,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -376148899732160815, guid: 2065ed0e5da4c32488ee069857918bd2,
+        type: 3}
+      propertyPath: chargeInfos.Array.data[1].color.g
+      value: 16
+      objectReference: {fileID: 0}
     - target: {fileID: 8939747984479376169, guid: 2065ed0e5da4c32488ee069857918bd2,
         type: 3}
       propertyPath: m_Name

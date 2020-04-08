@@ -1,3 +1,6 @@
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 using UnityEngine;
 using System;
 using System.Collections;
@@ -20,6 +23,8 @@ public static class AnimHelpers {
 public class SpriteAnim {
 	/// <summary> Poses to flip through </summary>
 	public Sprite[] poses;
+	/// <summary> Cues to fire </summary>
+	public SpriteAnimCue[] cues;
 	/// <summary> Speed to flip through poses at (frames per second) </summary>
 	public float animSpeed = 15.0f;
 	/// <summary> Should the sprites be mirrored over X? </summary>
@@ -31,12 +36,64 @@ public class SpriteAnim {
 	/// <summary> Should every other animation be played flipped over Y? </summary>
 	public bool animateMirrorY = false;
 }
+/// <summary> Storage object to hold sprite animation cues. </summary>
+[Serializable]
+public class SpriteAnimCue {
+	/// <summary> Frame that the message should fire on </summary>
+	public float frame;
+	/// <summary> Message that should be fired </summary>
+	public string message;
+	/// <summary> Optional, additional parameter to fire. </summary>
+	public string arg;
+}
+#if UNITY_EDITOR
+/// <summary> Custom drawer class to make it easier to edit cues </summary>
+[CustomPropertyDrawer(typeof(SpriteAnimCue))]
+public class SpriteAnimCueDrawer : PropertyDrawer {
+	private static readonly GUIContent FRAME_PREFIX = new GUIContent("F#");
+	private static readonly GUIContent MESSAGE_PREFIX = new GUIContent("MSG");
+	private static readonly GUIContent ARG_PREFIX = new GUIContent("ARG");
+	public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
+		EditorGUI.BeginProperty(position, label, property);
+		position = EditorGUI.PrefixLabel(position, GUIUtility.GetControlID(FocusType.Passive), label);
+		var indent = EditorGUI.indentLevel;
+		EditorGUI.indentLevel = 0;
+
+		float x = position.x;
+		float y = position.y;
+		float h = position.height;
+		float w1 = 45;
+		float w2 = 100;
+		float w3 = 100;
+		float spacing = 2;
+		Rect frameRect = new Rect(x, y, w1, h);
+		x += w1 + spacing;
+		Rect messageRect = new Rect(x, y, w2, h);
+		x += w2 + spacing;
+		Rect paramRect = new Rect(x, y, w3, h);
+		x += w3 + spacing;
+
+		EditorGUIUtility.labelWidth = 14f;
+		EditorGUI.PropertyField(frameRect, property.FindPropertyRelative("frame"), FRAME_PREFIX);
+		EditorGUIUtility.labelWidth = 28f;
+		EditorGUI.PropertyField(messageRect, property.FindPropertyRelative("message"), MESSAGE_PREFIX);
+		EditorGUIUtility.labelWidth = 28f;
+		EditorGUI.PropertyField(paramRect, property.FindPropertyRelative("arg"), ARG_PREFIX);
+
+		EditorGUI.indentLevel = indent;
+		EditorGUI.EndProperty();
+	}
+}
+#endif
 
 
 /// <summary> Behavior that handles sprite animation </summary>
 public class SpriteAnimator : MonoBehaviour {
 	/// <summary> Empty sprite array. </summary>
 	private static readonly Sprite[] EMPTY = new Sprite[0];
+
+	/// <summary> Optional asset to use to specify animation </summary>
+	public SpriteAnimAsset animAsset;
 
 	/// <summary> Target spriteRenderer </summary>
 	public SpriteRenderer spriteRenderer;
@@ -67,20 +124,45 @@ public class SpriteAnimator : MonoBehaviour {
 	public int loop { get { return anim != null ? ((int)(animTimeout * animSpeed)) / (poses.Length) : 0; } }
 	/// <summary> Get the percentage of how played the current animation is (may be over 1.0). </summary>
 	public float percent { get { return anim != null ? animTimeout * animSpeed / poses.Length : 0; } }
+
+	void Awake() {
+		if (animAsset != null) { anim = animAsset.data; }
+		if (spriteRenderer == null) { spriteRenderer = GetComponent<SpriteRenderer>(); }
+	}
 	
 	void Update() {
 		// Find missing link, and exit if not present.
 		if (spriteRenderer == null) { spriteRenderer = GetComponent<SpriteRenderer>(); }
 		if (spriteRenderer == null) { return; }
 
+		// Fire any cues that will be passed
+		CheckCues(animTimeout, Time.deltaTime * animRate);
 		// Elapse time
 		animTimeout += Time.deltaTime * animRate;
+
 
 		// Update sprite and flip states
 		spriteRenderer.sprite = GetPose(animTimeout);
 		spriteRenderer.flipX = GetMirrorX(animTimeout) ^ flipX;
 		spriteRenderer.flipY = GetMirrorY(animTimeout) ^ flipY;
 
+	}
+	
+	/// <summary> Checks for and fires any cues. </summary>
+	/// <param name="last"> Last animation time </param>
+	/// <param name="time"> Current animation time </param>
+	public void CheckCues(float last, float time) {
+		if (poses.Length == 0 || anim.cues == null || anim.cues.Length == 0) { return; }
+		float a = (last*animSpeed) % poses.Length;
+		float b = ((last+time)*animSpeed) % poses.Length;
+		for (int i = 0; i < anim.cues.Length; i++) {
+			var cue = anim.cues[i];
+			if (a <= cue.frame && b >= cue.frame) {
+				//Debug.Log($"Firing cue {cue.message}({cue.arg})");
+				gameObject.SendMessage(cue.message, cue.arg, SendMessageOptions.DontRequireReceiver);
+				gameObject.SendMessageUpwards(cue.message, cue.arg, SendMessageOptions.DontRequireReceiver);
+			}
+		}
 	}
 
 

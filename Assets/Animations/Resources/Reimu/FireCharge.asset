@@ -20,7 +20,11 @@ MonoBehaviour:
     - {fileID: -3845055962627754910, guid: f6cbe8e35f48a8b4187629cbdd2ada36, type: 3}
     - {fileID: -5851012432083235270, guid: f6cbe8e35f48a8b4187629cbdd2ada36, type: 3}
     - {fileID: -6028292632496441450, guid: f6cbe8e35f48a8b4187629cbdd2ada36, type: 3}
-    animSpeed: 6
+    cues:
+    - frame: 2
+      message: Shoot
+      arg: 
+    animSpeed: 12
     mirrorX: 0
     mirrorY: 0
     animateMirrorX: 0

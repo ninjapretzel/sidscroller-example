@@ -73,7 +73,7 @@ SpriteRenderer:
   m_SortingOrder: 9
   m_Sprite: {fileID: 535384510312143128, guid: 7404c5c71e6ac4e47ab6f90cd82dfe45, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_FlipX: 1
+  m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
   m_Size: {x: 1, y: 1}
@@ -94,9 +94,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 914037f3476a8144ba6b66e8d4da2d77, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  animAsset: {fileID: 0}
   spriteRenderer: {fileID: 0}
   anim:
     poses: []
+    cues: []
     animSpeed: 15
     mirrorX: 0
     mirrorY: 0
@@ -180,7 +182,7 @@ SpriteRenderer:
   m_Sprite: {fileID: 5753793059287547035, guid: 7404c5c71e6ac4e47ab6f90cd82dfe45,
     type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_FlipX: 1
+  m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
   m_Size: {x: 1, y: 1}
@@ -201,9 +203,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 914037f3476a8144ba6b66e8d4da2d77, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  animAsset: {fileID: 0}
   spriteRenderer: {fileID: 0}
   anim:
     poses: []
+    cues: []
     animSpeed: 15
     mirrorX: 0
     mirrorY: 0
@@ -261,17 +265,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2274ac544e6faa748978b2e1c029804d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  DEBUG_DRAW: 1
   doPP: 1
   plusHalfPPX: 0
   plusHalfPPY: 0
   pixelSize: 0.0625
-  DEBUG_DRAW: 1
+  spriteAnimator: {fileID: 2432794724501408056}
+  col: {fileID: 8939747984479376181}
+  snapDistance: 0.0625
   walkSpeed: 9
   dashSpeed: 21
   gravity: 35
   terminalVelocity: 30
   jumpPower: 16
-  snapDistance: 0.0625
   skinWidth: 0.125
   clingSpeed: 0.5
   clingResponse: 11
@@ -286,11 +292,19 @@ MonoBehaviour:
   canWallCling: 1
   canDash: 1
   canShoot: 1
-  spriteAnimator: {fileID: 2432794724501408056}
+  shotPrefabName: BlueShot
+  canCharge: 1
+  chargeInfos:
+  - time: 0.25
+    color: {r: 1, g: 1, b: 0.54901963, a: 1}
+    flashRate: 0.22
+  - time: 1.2
+    color: {r: 0.752, g: 1, b: 0.752, a: 1}
+    flashRate: 0.12
   effectAnimator: {fileID: 296437592}
-  col: {fileID: 8939747984479376181}
   defaultXFacing: 1
-  shootTimeout: 0.25
+  shootPoseTimeout: 0.25
+  shootOffset: {x: 1, y: -0.125}
   meleeComboTime: 0.8
   meleeComboPercent: 0.63
   animationPrefix: Marissa
@@ -298,11 +312,13 @@ MonoBehaviour:
   defaultAnim:
     poses:
     - {fileID: -20018093269653970, guid: f6cbe8e35f48a8b4187629cbdd2ada36, type: 3}
+    cues: []
     animSpeed: 15
     mirrorX: 0
     mirrorY: 0
     animateMirrorX: 0
     animateMirrorY: 0
+  chargeTime: 0
 --- !u!114 &8939747984479376182
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -1,3 +1,7 @@
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 using UnityEngine;
 using System;
 using System.Collections;
@@ -5,9 +9,53 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 /// <summary> Reasonably polished movement code. </summary>
 public class SidescrollController : PixelPerfectBehavior {
-	#region Input Simplifier
-	/// <summary> Current key states </summary>
-	public Dictionary<string, bool> keys;
+	/// <summary> Class to hold information about charging </summary>
+	[Serializable]
+	public class ChargeInfo {
+		public float time = .333f;
+		public Color color = Color.yellow;
+		public float flashRate = .25f;
+		public ChargeInfo() { }
+		public ChargeInfo(float time, Color color, float flashRate) { this.time = time; this.color = color; this.flashRate = flashRate; }
+	}
+#if UNITY_EDITOR
+	[CustomPropertyDrawer(typeof(ChargeInfo))]
+	public class SpriteAnimCueDrawer : PropertyDrawer {
+		private static readonly GUIContent TIME_PREFIX = new GUIContent("Time");
+		private static readonly GUIContent COLOR_PREFIX = new GUIContent("Color");
+		private static readonly GUIContent RATE_PREFIX = new GUIContent("Rate");
+		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
+			EditorGUI.BeginProperty(position, label, property);
+			position = EditorGUI.PrefixLabel(position, GUIUtility.GetControlID(FocusType.Passive), label);
+			var indent = EditorGUI.indentLevel;
+			EditorGUI.indentLevel = 0;
+			float x = position.x; float y = position.y; float h = position.height;
+			float w1 = 80;
+			float w2 = 80;
+			float w3 = 80;
+			float spacing = 5;
+			Rect rect1 = new Rect(x, y, w1, h);
+			x += w1 + spacing;
+			Rect rect2 = new Rect(x, y, w2, h);
+			x += w2 + spacing;
+			Rect rect3 = new Rect(x, y, w3, h);
+			x += w3 + spacing;
+
+			EditorGUIUtility.labelWidth = 28f;
+			EditorGUI.PropertyField(rect1, property.FindPropertyRelative("time"), TIME_PREFIX);
+			EditorGUIUtility.labelWidth = 36f;
+			EditorGUI.PropertyField(rect2, property.FindPropertyRelative("color"), COLOR_PREFIX);
+			EditorGUIUtility.labelWidth = 28f;
+			EditorGUI.PropertyField(rect3, property.FindPropertyRelative("flashRate"), RATE_PREFIX);
+
+			EditorGUI.indentLevel = indent;
+			EditorGUI.EndProperty();
+		}
+	}
+#endif
+		#region Input Simplifier
+		/// <summary> Current key states </summary>
+		public Dictionary<string, bool> keys;
 	/// <summary> Last frame's key states </summary>
 	public Dictionary<string, bool> lastKeys;
 	/// <summary> Updates the keystates by swapping dictionaries and checking keybinds. </summary>
@@ -25,10 +73,10 @@ public class SidescrollController : PixelPerfectBehavior {
 	}
 	/// <summary> Keybinds, key is the action name, value is the key for that action. </summary>
 	public Dictionary<string, KeyCode> binds = new Dictionary<string, KeyCode>() {
-		{ "left",	KeyCode.LeftArrow },
-		{ "right",	KeyCode.RightArrow },
-		{ "down",	KeyCode.DownArrow},
-		{ "up",		KeyCode.UpArrow },
+		{ "left",	KeyCode.J },
+		{ "right",	KeyCode.L },
+		{ "down",	KeyCode.K },
+		{ "up",		KeyCode.I },
 		{ "jump",	KeyCode.Z },
 		{ "shoot",	KeyCode.X },
 		{ "dash",	KeyCode.C },
@@ -43,9 +91,6 @@ public class SidescrollController : PixelPerfectBehavior {
 	public bool Held(string action) { return binds.ContainsKey(action) ? keys[action] : false; }
 	#endregion
 
-	/// <summary> Draw some debugging information </summary>
-	public bool DEBUG_DRAW = false;
-
 	[Header("Movement")]
 	/// <summary> Units per second walking movement. 1 unit = 16 pixels = 1 tile </summary>
 	public float walkSpeed = 7;
@@ -57,8 +102,6 @@ public class SidescrollController : PixelPerfectBehavior {
 	public float terminalVelocity = 40;
 	/// <summary> Velocity applied when jumping </summary>
 	public float jumpPower = 15.0f;
-	/// <summary> Distance to snap to ground surface. Default = 1/16 </summary>
-	public float snapDistance = 0.0625f;
 	/// <summary> Distance to use to check for collision. Default = 2/16 </summary>
 	public float skinWidth = 0.125f;
 	/// <summary> Falling rate when clinging to a wall </summary>
@@ -90,20 +133,30 @@ public class SidescrollController : PixelPerfectBehavior {
 	public bool canDash = false;
 	/// <summary> Can the character shoot? </summary>
 	public bool canShoot = false;
+	/// <summary> Prefab name of projectile to use </summary>
+	public string shotPrefabName = "Shot";
+	/// <summary> Can the character charge their shot? </summary>
+	public bool canCharge = false;
+
+	/// <summary> Times for stages of charging </summary>
+	public ChargeInfo[] chargeInfos = { 
+		new ChargeInfo(.333f, new Color(1.5f, 1.5f, 1f, 1f), .25f),
+		new ChargeInfo(2.00f, new Color(1.5f, 2.5f, 1f, 1f), .15f), 
+	};
 
 	/// <summary> Character sprite animator </summary>
 	[Header("Links")]
-	public SpriteAnimator spriteAnimator;
 	/// <summary> Effect sprite animator </summary>
 	public SpriteAnimator effectAnimator;
-	/// <summary> Physics collider </summary>
-	public Collider2D col;
 
 	/// <summary> Sprite X direction. 1.0 if right, -1.0 if left. </summary>
 	[Header("Animations")]
 	public float defaultXFacing = 1.0f;
 	/// <summary> Time the shoot pose is held after shooting </summary>
-	public float shootTimeout = .25f;
+	public float shootPoseTimeout = .25f;
+	/// <summary> Offset to create projectiles at </summary>
+	public Vector2 shootOffset = new Vector2(1f, 0f);
+	
 	/// <summary> Time between button presses where combos will connect </summary>
 	public float meleeComboTime = 0.8f;
 	/// <summary> Percentage melee animation must finish before another melee attack can begin </summary>
@@ -122,6 +175,7 @@ public class SidescrollController : PixelPerfectBehavior {
 	public SpriteAnim ClimbDone			{ get { return LoadSpriteAnim(MemberName()); } }
 	public SpriteAnim Dash				{ get { return LoadSpriteAnim(MemberName()); } }
 	public SpriteAnim Falling			{ get { return LoadSpriteAnim(MemberName()); } }
+	public SpriteAnim FireCharge		{ get { return LoadSpriteAnim(MemberName()); } }
 	public SpriteAnim Float				{ get { return LoadSpriteAnim(MemberName()); } }
 	public SpriteAnim Hurt				{ get { return LoadSpriteAnim(MemberName()); } }
 	public SpriteAnim Idle				{ get { return LoadSpriteAnim(MemberName()); } }
@@ -149,7 +203,7 @@ public class SidescrollController : PixelPerfectBehavior {
 	/// <param name="animName"> Animation name to load </param>
 	/// <returns> SpriteAnim loaded from a resource, or <see cref="defaultAnim"/> if none was loaded. </returns>
 	private SpriteAnim LoadSpriteAnim(string animName) {
-		if (lastShoot < shootTimeout) {
+		if (lastShoot < shootPoseTimeout) {
 			SpriteAnimAsset shootAsset = Resources.Load<SpriteAnimAsset>(animationPrefix + "/" + animName + "Shoot");
 			if (shootAsset != null) { 
 				currentAnimation = animName + "Shoot";
@@ -203,7 +257,8 @@ public class SidescrollController : PixelPerfectBehavior {
 	float lastDodge = 3;
 	/// <summary> Timer since the last wallkick was used. </summary>
 	float lastKick = 3;
-	
+	/// <summary> Time spent charging the current shot </summary>
+	public float chargeTime = 0;
 
 	/// <summary> Can the character actually move right now? </summary>
 	bool canMove = true;
@@ -213,16 +268,7 @@ public class SidescrollController : PixelPerfectBehavior {
 	public bool clingingLeft { get { return (input.x < 0 && wallOnLeft); } }
 	/// <summary> Is the character wall-clinging to the right? </summary>
 	public bool clingingRight { get { return (input.x > 0 && wallOnRight); } }
-
-	/// <summary> Preallocated array for collisions </summary>
-	private Collider2D[] collisions = new Collider2D[16];
-	// <summary> Preallocated array for collisions </summary>
-	//private Collider2D[] lastCollisions = new Collider2D[16];
-	/// <summary> Preallocated array for collisions </summary>
-	private RaycastHit2D[] raycastHits = new RaycastHit2D[16];
-	// <summary> Preallocated array for collisions </summary>
-	//private RaycastHit2D[] lastRaycastHits = new RaycastHit2D[16];
-
+	
 	/// <summary> See if we are currently grounded.</summary>
 	public bool CheckGrounded() { return velocity.y <= 0 && IsTouching(Vector2.down * skinWidth); }
 	/// <summary> Check if we will touch the ground during the next frame </summary>
@@ -237,7 +283,7 @@ public class SidescrollController : PixelPerfectBehavior {
 	/// <summary> Called by Unity on load. </summary>
 	void Awake() {
 		Application.targetFrameRate = 60;	
-		UpdateAnimation(Vector3.zero, Vector3.zero);
+		//UpdateAnimation(Vector3.zero, Vector3.zero);
 	}
 	
 	/// <summary> Called by Unity before first frame. </summary>
@@ -261,17 +307,33 @@ public class SidescrollController : PixelPerfectBehavior {
 		}
 
 		canMove = true;
-		if (meleeState <= MELEE_PLAYING) {
-			canMove = !isGrounded && !clinging;
-		}
+		if (meleeState <= MELEE_PLAYING) { canMove = !isGrounded && !clinging; }
+		if (currentAnimation == "FireCharge") { canMove = false; }
 
 		lastShoot += Time.deltaTime;
 		lastMelee += Time.deltaTime;
 		lastDodge += Time.deltaTime;
 		lastKick += Time.deltaTime;
-		if (canShoot && Pressed("shoot")) {
-			lastShoot = 0;
+
+		if (canShoot) {
+			// if (Held("shoot")) { lastShoot = 0; }
+			if (Pressed("shoot")) {
+				lastShoot = 0;
+				chargeTime = 0;
+				Fire();
+			} else if (canCharge && Held("shoot")) {
+				chargeTime += Time.deltaTime;
+			}
+
+			if (canCharge && Released("shoot") && chargeInfos.Length > 0) {
+				if (chargeTime > chargeInfos[0].time) {
+					lastShoot = 0;
+				} else {
+					chargeTime = 0;
+				}
+			}
 		}
+
 		if (velocity.y > 0 && Released("jump")) {
 			velocity.y = 0;
 		}
@@ -358,6 +420,30 @@ public class SidescrollController : PixelPerfectBehavior {
 		ApplyPixelPerfect();
 	}
 
+	public void Fire() {
+		int charged = 0;
+		if (chargeTime > 0 && chargeInfos != null) {
+			for (int i = 0; i < chargeInfos.Length; i++) {
+				if (chargeTime > chargeInfos[i].time) { charged = i + 1; }
+			}
+		}
+		chargeTime = 0;
+
+		Transform shotPrefab = Resources.Load<Transform>(shotPrefabName + (charged > 0 ? "" + charged : ""));
+		Vector3 offset = shootOffset;
+		offset.x *= facing;
+		Transform shot = Instantiate(shotPrefab, transform.position + offset, Quaternion.identity);
+
+		SimpleProjectile proj = shot.GetComponent<SimpleProjectile>();
+		if (proj != null) {
+			proj.velocity.x *= facing;
+			proj.spriteAnimator.flipX = spriteAnimator.flipX;
+		}
+	}
+	public void Shoot(string arg) {
+		Fire();
+	}
+
 	/// <summary> Update the animation based on applied and requested movement. </summary>
 	private void UpdateAnimation(Vector3 moved, Vector3 movement) {
 		
@@ -367,6 +453,25 @@ public class SidescrollController : PixelPerfectBehavior {
 		}
 		if (spriteAnimator == null) { return; }
 		spriteAnimator.flipX = facing != Mathf.Sign(defaultXFacing);
+
+
+		if (chargeTime > 0 && chargeInfos.Length > 0) {
+			ChargeInfo info = chargeInfos[0];
+			for (int i = 0; i < chargeInfos.Length; i++) {
+				if (chargeTime > chargeInfos[i].time) {
+					info = chargeInfos[i];
+				}
+			}
+			float point = (chargeTime % info.flashRate) / info.flashRate;
+			
+			spriteAnimator.spriteRenderer.color = (point < .5f ? Color.white : info.color);
+		} else {
+			spriteAnimator.spriteRenderer.color = Color.white;
+		}
+
+		if (currentAnimation == "FireCharge") { 
+			if (spriteAnimator.percent < .99) { return; }
+		}
 		if (meleeState == MELEE_STARTING) {
 			//Debug.Log("Melee message recieved");
 			SpriteAnim meleeAnim = Melee;
@@ -410,6 +515,9 @@ public class SidescrollController : PixelPerfectBehavior {
 
 		if (isGrounded) {
 			lastDodge = 3;
+			if (lastShoot == 0 && chargeTime > 0) {
+				spriteAnimator.Play(FireCharge, null, 0);
+			}
 		} else {
 			spriteAnimator.anim = velocity.y > 0 ? Rising : Falling;
 
@@ -419,8 +527,12 @@ public class SidescrollController : PixelPerfectBehavior {
 			if (clinging) {
 				spriteAnimator.anim = WallCling;
 				dashing = false;
-			} 
+			}
+			if (lastShoot == 0 && chargeTime > 0) {
+				Fire();
+			}
 		}
+		
 
 	}
 
@@ -460,7 +572,7 @@ public class SidescrollController : PixelPerfectBehavior {
 				NextLine();
 			}
 			DrawThinBar(lastMelee / meleeComboTime, Color.red);
-			DrawThinBar(lastShoot / shootTimeout, Color.cyan);
+			DrawThinBar(lastShoot / shootPoseTimeout, Color.cyan);
 
 			DrawThinBar(spriteAnimator.percent % 1.0f, 
 				(meleeState == MELEE_PLAYING && spriteAnimator.percent < meleeComboPercent) ? Color.yellow 
@@ -469,155 +581,7 @@ public class SidescrollController : PixelPerfectBehavior {
 
 		}
 	}
-	void DrawBox(Vector3 p, Vector3 s, Color? color = null) {
-		Color c = color ?? Color.white;
-		Vector3 c1 = s;
-		Vector3 c2 = s; c2.x *= -1;
-		Vector3 c3 = s; c3.x *= -1; c3.y *= -1;
-		Vector3 c4 = s; c4.y *= -1;
-
-		Debug.DrawLine(p + c1, p + c2, c);
-		Debug.DrawLine(p + c3, p + c2, c);
-		Debug.DrawLine(p + c3, p + c4, c);
-		Debug.DrawLine(p + c1, p + c4, c);
-	}
 
 
-
-	/// <summary> Attempt to move the character, and get how far they actually moved. </summary>
-	/// <param name="movement"> Requested movement </param>
-	/// <returns> Applied movement </returns>
-	private Vector3 Move(Vector3 movement) {
-		col = GetComponent<Collider2D>();
-		//Physics.BoxCastNonAlloc()
-		Vector3 moved = Vector3.zero;
-		moved += DoMove(new Vector3(0, movement.y, 0));
-		while (moved.y == 0 && Math.Abs(movement.y) > snapDistance) {
-			movement.y *= .5f;
-			moved += DoMove(new Vector3(0, movement.y, 0));
-		}
-		moved += DoMove(new Vector3(movement.x, 0, 0));
-		while (moved.x == 0 && Math.Abs(movement.x) > snapDistance) {
-			movement.x *= .5f;
-			moved += DoMove(new Vector3(movement.x, 0, 0));
-		}
-		return moved;
-	}
-
-	/// <summary> Move the character until they are in contact with some surface. </summary>
-	/// <param name="movement"> Requested movement </param>
-	/// <returns> Applied movement </returns>
-	private Vector3 DoMoveUntilTouching(Vector3 movement) {
-		bool move = true;
-		float maxDist = movement.magnitude;
-		Vector3 target = transform.position + movement;
-		
-		if (col != null) {
-			if (col is BoxCollider2D) {
-				BoxCollider2D box = col as BoxCollider2D;
-				Vector3 point = box.transform.position + (Vector3)box.offset + movement;
-				
-				//
-				int numCollisions = Physics2D.BoxCastNonAlloc(box.transform.position + (Vector3)box.offset, box.size, 0, Vector3.down, raycastHits, maxDist);
-				if (numCollisions != 0) {
-					for (int i = 0; i < numCollisions; i++) {
-						if (raycastHits[i].collider == col) { continue; }
-						if (!raycastHits[i].collider.isTrigger) {
-							maxDist = Mathf.Min(maxDist, raycastHits[i].distance);
-							// target = raycastHits[i].centroid;
-							if (maxDist == 0) { move = false; break; }
-							//move = false;
-						}
-					}
-				}
-			}
-		}
-
-		if (move && maxDist > skinWidth) {
-			//transform.position = target;
-			transform.position = transform.position + movement.normalized * (maxDist - skinWidth);
-			return movement.normalized * maxDist;
-		}
-
-		return Vector3.zero;
-	}
-	/// <summary> Attempt to move the character, and get how far they actually moved. `</summary>
-	/// <param name="movement"> Requested movement. </param>
-	/// <returns> Applied movement </returns>
-	private Vector3 DoMove(Vector3 movement) {
-		bool move = true;
-
-		if (col != null) {
-			if (col is BoxCollider2D) {
-				BoxCollider2D box = col as BoxCollider2D;
-				Vector3 point = box.transform.position + (Vector3)box.offset + movement;
-				DrawBox(point, box.size/2f, Color.blue);
-				int numCollisions = Physics2D.OverlapBoxNonAlloc(point, box.size, 0, collisions);
-				if (numCollisions != 0) {
-					for (int i = 0; i < numCollisions; i++) {
-						if (collisions[i] == col) { continue; }
-						if (!collisions[i].isTrigger) {
-							move = false;
-						}
-					}
-				}
-			}
-
-		}
-
-		if (move) {
-			transform.position = transform.position + movement;
-			return movement;
-		}
-
-		return Vector3.zero;
-	}
-
-	/// <summary> Check if the character would touch something when their collider is swept along a direction </summary>
-	/// <param name="sweep"> Sweep direction/distance vector </param>
-	/// <returns> True if they would hit something, false otherwise. </returns>
-	public bool IsTouching(Vector3 sweep) {
-		if (col != null) {
-			if (col is BoxCollider2D) {
-				BoxCollider2D box = col as BoxCollider2D;
-				Vector3 point = box.transform.position + (Vector3)box.offset;
-				//float adjWidth = 1f;
-				
-
-				if (DEBUG_DRAW) { // Draw the touching check.
-					
-					DrawBox(point, box.size * .5f);
-					DrawBox(point+sweep, box.size * .5f, Color.cyan);
-				}
-
-				Vector2 adjSize = box.size;
-				//adjSize.x *= adjWidth;
-
-				int numCollisions = Physics2D.BoxCastNonAlloc(point, adjSize, 0, sweep, raycastHits, sweep.magnitude + snapDistance);
-				if (numCollisions > 0) {
-					int lowest = -1;
-					float lowestDistance = sweep.magnitude + snapDistance;
-
-					for (int i = 0; i < numCollisions; i++) {
-						if (raycastHits[i].collider == col) { continue; } // Skip own collider.
-						if (!raycastHits[i].collider.isTrigger) {
-
-							if (raycastHits[i].distance < lowestDistance) {
-								lowest = i;
-								lowestDistance = raycastHits[i].distance;
-							}
-
-						}
-					}
-
-					if (lowest >= 0) {
-						return true;
-					}
-
-				}
-			}
-		}
-
-		return false;
-	}
+	
 }

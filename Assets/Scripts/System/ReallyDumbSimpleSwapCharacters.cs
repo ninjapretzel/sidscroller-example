@@ -23,7 +23,7 @@ public class ReallyDumbSimpleSwapCharacters : MonoBehaviour {
 	}
 	
 	void LateUpdate() {
-		if (Input.GetKeyDown("k")) {
+		if (Input.GetKeyDown(KeyCode.Equals)) {
 			Destroy(daemon.activePlayer.gameObject);
 			daemon.playerPrefab = (daemon.playerPrefab == playerPrefab1) ? playerPrefab2 : playerPrefab1;
 		}

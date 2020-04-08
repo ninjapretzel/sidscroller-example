@@ -74,7 +74,7 @@ SpriteRenderer:
   m_Sprite: {fileID: 1665790606788667478, guid: 25f19dcc98691c242824fab5ee238873,
     type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_FlipX: 1
+  m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
   m_Size: {x: 1, y: 1}
@@ -95,9 +95,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 914037f3476a8144ba6b66e8d4da2d77, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  animAsset: {fileID: 0}
   spriteRenderer: {fileID: 0}
   anim:
     poses: []
+    cues: []
     animSpeed: 15
     mirrorX: 0
     mirrorY: 0
@@ -181,7 +183,7 @@ SpriteRenderer:
   m_Sprite: {fileID: 3010387378022065175, guid: f6cbe8e35f48a8b4187629cbdd2ada36,
     type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_FlipX: 1
+  m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
   m_Size: {x: 1, y: 1}
@@ -202,9 +204,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 914037f3476a8144ba6b66e8d4da2d77, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  animAsset: {fileID: 0}
   spriteRenderer: {fileID: 0}
   anim:
     poses: []
+    cues: []
     animSpeed: 15
     mirrorX: 0
     mirrorY: 0
@@ -262,17 +266,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2274ac544e6faa748978b2e1c029804d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  DEBUG_DRAW: 1
   doPP: 1
   plusHalfPPX: 0
   plusHalfPPY: 0
   pixelSize: 0.0625
-  DEBUG_DRAW: 1
+  spriteAnimator: {fileID: 2432794724501408056}
+  col: {fileID: 8939747984479376181}
+  snapDistance: 0.0625
   walkSpeed: 7
   dashSpeed: 16
   gravity: 33
   terminalVelocity: 25
   jumpPower: 14
-  snapDistance: 0.0625
   skinWidth: 0.125
   clingSpeed: 1
   clingResponse: 11
@@ -287,11 +293,19 @@ MonoBehaviour:
   canWallCling: 1
   canDash: 1
   canShoot: 1
-  spriteAnimator: {fileID: 2432794724501408056}
+  shotPrefabName: RedShot
+  canCharge: 1
+  chargeInfos:
+  - time: 0.333
+    color: {r: 1, g: 1, b: 0.5529412, a: 1}
+    flashRate: 0.25
+  - time: 2
+    color: {r: 0.75, g: 1, b: 0.75, a: 1}
+    flashRate: 0.15
   effectAnimator: {fileID: 296437592}
-  col: {fileID: 8939747984479376181}
   defaultXFacing: 1
-  shootTimeout: 0.25
+  shootPoseTimeout: 0.25
+  shootOffset: {x: 1, y: -0.0625}
   meleeComboTime: 0.8
   meleeComboPercent: 0.63
   animationPrefix: Reimu
@@ -299,11 +313,13 @@ MonoBehaviour:
   defaultAnim:
     poses:
     - {fileID: -20018093269653970, guid: f6cbe8e35f48a8b4187629cbdd2ada36, type: 3}
+    cues: []
     animSpeed: 15
     mirrorX: 0
     mirrorY: 0
     animateMirrorX: 0
     animateMirrorY: 0
+  chargeTime: 0
 --- !u!114 &8939747984479376182
 MonoBehaviour:
   m_ObjectHideFlags: 0
